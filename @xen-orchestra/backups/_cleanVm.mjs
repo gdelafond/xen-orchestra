@@ -7,8 +7,8 @@ import { dirname, resolve } from 'node:path'
 import { isMetadataFile, isVhdFile, isXvaFile, isXvaSumFile } from './_backupType.mjs'
 import { limitConcurrency } from 'limit-concurrency-decorator'
 import { mergeVhdChain } from 'vhd-lib/merge.js'
+import { Task } from '@vates/task'
 
-import { Task } from './Task.mjs'
 import { Disposable } from 'promise-toolbox'
 import handlerPath from '@xen-orchestra/fs/path'
 
@@ -487,7 +487,7 @@ export async function cleanVm(
 
   await Promise.all([
     ...unusedVhdsDeletion,
-    toMerge.length !== 0 && (merge ? Task.run({ name: 'merge' }, doMerge) : doMerge()),
+    toMerge.length !== 0 && (merge ? Task.run({ properties: { name: 'merge' } }, doMerge) : doMerge()),
     asyncMap(unusedXvas, path => {
       logWarn('unused XVA', { path })
       if (remove) {

@@ -57,8 +57,11 @@ export const Metadata = class MetadataBackupRunner extends Abstract {
             // See https://github.com/vatesfr/xen-orchestra/commit/6aa6cfba8ec939c0288f0fa740f6dfad98c43cbb
             runTask(
               {
-                name: 'get pool record',
-                data: { type: 'pool', id },
+                properties: {
+                  id,
+                  name: 'get pool record',
+                  type: 'pool',
+                },
               },
               () => Promise.reject(error)
             )
@@ -83,9 +86,9 @@ export const Metadata = class MetadataBackupRunner extends Abstract {
             asyncMap(pools, async pool =>
               runTask(
                 {
-                  name: `Starting metadata backup for the pool (${pool.$id}). (${job.id})`,
-                  data: {
+                  properties: {
                     id: pool.$id,
+                    name: `Starting metadata backup for the pool (${pool.$id}). (${job.id})`,
                     pool,
                     poolMaster: await ignoreErrors.call(pool.$xapi.getRecord('host', pool.master)),
                     type: 'pool',
@@ -109,8 +112,8 @@ export const Metadata = class MetadataBackupRunner extends Abstract {
           promises.push(
             runTask(
               {
-                name: `Starting XO metadata backup. (${job.id})`,
-                data: {
+                properties: {
+                  name: `Starting XO metadata backup. (${job.id})`,
                   type: 'xo',
                 },
               },

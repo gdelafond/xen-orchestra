@@ -1,7 +1,8 @@
 import Disposable from 'promise-toolbox/Disposable'
 import pTimeout from 'promise-toolbox/timeout'
 import { compileTemplate } from '@xen-orchestra/template'
-import { runTask } from './_runTask.mjs'
+import { Task } from '@vates/task'
+
 import { RemoteTimeoutError } from './_RemoteTimeoutError.mjs'
 
 export const DEFAULT_SETTINGS = {
@@ -36,13 +37,16 @@ export const Abstract = class AbstractRunner {
         })
       } catch (error) {
         // See https://github.com/vatesfr/xen-orchestra/commit/6aa6cfba8ec939c0288f0fa740f6dfad98c43cbb
-        runTask(
+        Task.run(
           {
-            name: 'get remote adapter',
-            data: { type: 'remote', id: remoteId },
+            properties: {
+              id: remoteId,
+              name: 'get remote adapter',
+              type: 'remote',
+            },
           },
           () => Promise.reject(error)
-        )
+        ).catch(noop)
       }
     }
   }

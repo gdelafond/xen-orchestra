@@ -1,9 +1,9 @@
 import { asyncMapSettled } from '@xen-orchestra/async-map'
 import Disposable from 'promise-toolbox/Disposable'
 import { limitConcurrency } from 'limit-concurrency-decorator'
+import { Task } from '@vates/task'
 
 import { extractIdsFromSimplePattern } from '../extractIdsFromSimplePattern.mjs'
-import { Task } from '../Task.mjs'
 import createStreamThrottle from './_createStreamThrottle.mjs'
 import { DEFAULT_SETTINGS, Abstract } from './_Abstract.mjs'
 import { runTask } from './_runTask.mjs'
@@ -59,8 +59,11 @@ export const VmsXapi = class VmsXapiBackupRunner extends Abstract {
           this._getRecord('SR', id).catch(error => {
             runTask(
               {
-                name: 'get SR record',
-                data: { type: 'SR', id },
+                properties: {
+                  id,
+                  name: 'get SR record',
+                  type: 'SR',
+                },
               },
               () => Promise.reject(error)
             )
@@ -90,7 +93,13 @@ export const VmsXapi = class VmsXapiBackupRunner extends Abstract {
         const baseSettings = this._baseSettings
 
         const handleVm = vmUuid => {
-          const taskStart = { name: 'backup VM', data: { type: 'VM', id: vmUuid } }
+          const taskStart = {
+            properties: {
+              id: vmUuid,
+              name: 'backup VM',
+              type: 'VM',
+            },
+          }
 
           return this._getRecord('VM', vmUuid).then(
             disposableVm =>
