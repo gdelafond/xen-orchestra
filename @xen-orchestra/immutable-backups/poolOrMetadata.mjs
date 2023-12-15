@@ -1,12 +1,9 @@
 import { join } from 'node:path'
 import * as Directory from './file.mjs'
-import { watchForExistingAndNew } from './newFileWatcher.mjs'
+import {  watchForNew } from './newFileWatcher.mjs'
 
 async function waitForCompletion(path) {
-  await watchForExistingAndNew(path, (pathInDirectory, isNew, watcher) => {
-    if (!isNew) {
-      return
-    }
+  await watchForNew(path, (pathInDirectory, isNew, watcher) => {
     if (pathInDirectory === 'metadata.json') {
       watcher.close()
       // will end the watcher, stop this loop and return
@@ -15,10 +12,7 @@ async function waitForCompletion(path) {
 }
 
 export async function watch(basePath, immutabilityCachePath) {
-  await watchForExistingAndNew(basePath, async (pathInDirectory, isNew) => {
-    if (!isNew) {
-      return
-    }
+  await watchForNew(basePath, async pathInDirectory => {
     const path = join(basePath, pathInDirectory)
     await waitForCompletion(path)
     await Directory.makeImmutable(path, immutabilityCachePath)

@@ -8,23 +8,31 @@ import { watchForExistingAndNew } from './newFileWatcher.mjs'
 
 const { warn } = createLogger('xen-orchestra:immutable-backups:remote')
 
-async function test(remote) {
-  await fs.readdir(remote)
+async function test(remotePath) { 
+  await fs.readdir(remotePath)
+const immutabilityCache = path.join(remotePath, '.immutable')
+try{
 
-  const testPath = path.join(remote, '.test-immut')
+    await fs.mkdir(immutabilityCache)
+}catch(err){
+    if(err.code !== 'EEXIST'){
+        throw err
+    }
+}
+  const testPath = path.join(remotePath, '.test-immut')
   // cleanup
   try {
-    await File.liftImmutability(testPath)
+    await File.liftImmutability(testPath,immutabilityCache)
     await fs.unlink(testPath)
   } catch (err) {}
   // can create , modify and delete a file
   await fs.writeFile(testPath, `test immut ${new Date()}`)
   await fs.writeFile(testPath, `test immut change 1 ${new Date()}`)
   await fs.unlink(testPath)
-
+  
   // cannot modify or delete an immutable file
   await fs.writeFile(testPath, `test immut ${new Date()}`)
-  await File.makeImmutable(testPath)
+  await File.makeImmutable(testPath,immutabilityCache)
   try {
     await fs.writeFile(testPath, `test immut change 2  ${new Date()}`)
     await fs.unlink(testPath)
@@ -35,7 +43,7 @@ async function test(remote) {
     }
   }
   // can modify and delete a file after lifting immutability
-  await File.liftImmutability(testPath)
+  await File.liftImmutability(testPath,immutabilityCache)
   await fs.writeFile(testPath, `test immut change 3 ${new Date()}`)
   await fs.unlink(testPath)
 }
@@ -45,20 +53,23 @@ async function liftImmutability(remoteRootPath, immutabilityDuration) {
 }
 
 export async function watchRemote(remoteRootPath, immutabilityDuration) {
-  await test()
+  await test(remoteRootPath)
 
   // add duration and watch status in the metadata.json of the remote
   await fs.writeFile(
     path.join(
       remoteRootPath,
-      '.immutable-settings.json',
+      '.immutable-settings.json'
+    ),
       JSON.stringify({
         since: +new Date(),
         immutable: true,
         duration: immutabilityDuration,
       })
-    )
+    
   )
+
+const immutabilityCachePath = path.join(remoteRootPath, '.immutable')
   // watch the remote for any new VM metadata json file
 
   watchForExistingAndNew(remoteRootPath, async pathInRemote => {
@@ -69,18 +80,14 @@ export async function watchRemote(remoteRootPath, immutabilityDuration) {
           console.log(vmId, ' is lock dir, skip')
           return
         }
-        Vm.watch(path.join(remoteRootPath, 'xo-vm-backups', vmId))
+        Vm.watch(path.join(remoteRootPath, 'xo-vm-backups', vmId),immutabilityCachePath)
       }).catch(warn)
     }
 
     if (['xo-config-backups', 'xo-pool-metadata-backups'].includes(pathInRemote)) {
-      watchPoolOrMetadata(path.join(remoteRootPath, 'xo-vm-backups')).catch(warn)
+      watchPoolOrMetadata(path.join(remoteRootPath, 'xo-vm-backups'),immutabilityCachePath).catch(warn)
     }
   }).catch(warn)
-
-  setInterval(async () => {
-    await liftImmutability(remoteRootPath, immutabilityDuration)
-  }, 60 * 60 * 1000)
 
   // @todo : shoulw also watch metadata and pool backups
 }
@@ -108,4 +115,4 @@ async function deepCheck() {
  *
  */
 
-watchRemote('/mnt/ssd/vhdblock/')
+watchRemote('/mnt/ssd/vhdblock/', 7 * 24 * 60 * 60 * 1000)

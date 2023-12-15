@@ -8,6 +8,7 @@ export function sha256(content) {
 }
 
 export async function makeImmutable(dirPath, immutabilityCachePath) {
+    console.log('dir.makeImmutable', {path, immutabilityCachePath})
   const cacheFileName = computeCacheFilePath(dirPath, immutabilityCachePath, false)
   await fs.writeFile(cacheFileName, dirPath)
   await execa('chattr', ['+i', '-R', dirPath])
@@ -15,8 +16,14 @@ export async function makeImmutable(dirPath, immutabilityCachePath) {
 }
 
 export async function liftImmutability(dirPath, immutabilityCachePath) {
-  const cacheFileName = computeCacheFilePath(dirPath, immutabilityCachePath, false)
-  await execa('chattr', ['-i', cacheFileName])
+    try{
+        const cacheFileName = computeCacheFilePath(dirPath, immutabilityCachePath, false)
+        await execa('chattr', ['-i', cacheFileName])
+    }catch(err){
+        if(err.code !== 'ENOENT'){
+            throw err
+        }
+    }
   await execa('chattr', ['-i', '-R', dirPath])
   await fs.unlink(cacheFileName)
 }
