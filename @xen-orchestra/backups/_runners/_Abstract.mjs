@@ -5,6 +5,8 @@ import { Task } from '@vates/task'
 
 import { RemoteTimeoutError } from './_RemoteTimeoutError.mjs'
 
+const noop = Function.prototype
+
 export const DEFAULT_SETTINGS = {
   getRemoteTimeout: 300e3,
   reportWhen: 'failure',
