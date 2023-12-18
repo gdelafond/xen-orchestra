@@ -1,4 +1,5 @@
 import { asyncMap } from '@xen-orchestra/async-map'
+import { Task } from '@vates/task'
 import Disposable from 'promise-toolbox/Disposable'
 import ignoreErrors from 'promise-toolbox/ignoreErrors'
 
@@ -6,13 +7,14 @@ import { extractIdsFromSimplePattern } from '../extractIdsFromSimplePattern.mjs'
 import { PoolMetadataBackup } from './_PoolMetadataBackup.mjs'
 import { XoMetadataBackup } from './_XoMetadataBackup.mjs'
 import { DEFAULT_SETTINGS, Abstract } from './_Abstract.mjs'
-import { runTask } from './_runTask.mjs'
 import { getAdaptersByRemote } from './_getAdaptersByRemote.mjs'
 
 const DEFAULT_METADATA_SETTINGS = {
   retentionPoolMetadata: 0,
   retentionXoMetadata: 0,
 }
+
+const noop = Function.prototype
 
 export const Metadata = class MetadataBackupRunner extends Abstract {
   _computeBaseSettings(config, job) {
@@ -55,7 +57,7 @@ export const Metadata = class MetadataBackupRunner extends Abstract {
         poolIds.map(id =>
           this._getRecord('pool', id).catch(error => {
             // See https://github.com/vatesfr/xen-orchestra/commit/6aa6cfba8ec939c0288f0fa740f6dfad98c43cbb
-            runTask(
+            new Task(
               {
                 properties: {
                   id,
@@ -64,7 +66,7 @@ export const Metadata = class MetadataBackupRunner extends Abstract {
                 },
               },
               () => Promise.reject(error)
-            )
+            ).catch(noop)
           })
         )
       ),
@@ -84,7 +86,7 @@ export const Metadata = class MetadataBackupRunner extends Abstract {
         if (pools.length !== 0 && settings.retentionPoolMetadata !== 0) {
           promises.push(
             asyncMap(pools, async pool =>
-              runTask(
+              new Task(
                 {
                   properties: {
                     id: pool.$id,
@@ -103,14 +105,14 @@ export const Metadata = class MetadataBackupRunner extends Abstract {
                     schedule,
                     settings,
                   }).run()
-              )
+              ).catch(noop)
             )
           )
         }
 
         if (job.xoMetadata !== undefined && settings.retentionXoMetadata !== 0) {
           promises.push(
-            runTask(
+            new Task(
               {
                 properties: {
                   name: `Starting XO metadata backup. (${job.id})`,
@@ -125,7 +127,7 @@ export const Metadata = class MetadataBackupRunner extends Abstract {
                   schedule,
                   settings,
                 }).run()
-            )
+            ).catch(noop)
           )
         }
         await Promise.all(promises)
