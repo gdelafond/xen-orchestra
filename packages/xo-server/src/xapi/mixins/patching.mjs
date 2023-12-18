@@ -493,9 +493,7 @@ export default {
   },
 
   @decorateWith(deferrable)
-  async rollingPoolUpdate($defer, { xsCredentials } = {}) {
-    const isXcp = _isXcp(this.pool.$master)
-
+  async roolingPullReboot($defer, { xsCredentials, beforeEvacuateAny, beforeEvacuateHost } = {}){
     if (this.pool.ha_enabled) {
       const haSrs = this.pool.$ha_statefiles.map(vdi => vdi.SR)
       const haConfig = this.pool.ha_configuration
@@ -527,12 +525,9 @@ export default {
       hasMissingPatchesByHost[hostUuid] = missingPatches.length > 0
     })
 
-    // On XS/CH, start by installing patches on all hosts
-    if (!isXcp) {
-      log.debug('Install patches')
-      await this.installPatches({ xsCredentials })
+    if(beforeEvacuateAny){
+      await beforeEvacuateAny()
     }
-
     // Remember on which hosts the running VMs are
     const vmRefsByHost = mapValues(
       groupBy(
@@ -576,22 +571,13 @@ export default {
       await this._waitObjectState(metricsRef, metrics => metrics.live)
 
       const getServerTime = async () => parseDateTime(await this.call('host.get_servertime', host.$ref)) * 1e3
-      let rebootTime
-      if (isXcp) {
-        // On XCP-ng, install patches on each host one by one instead of all at once
-        log.debug(`Evacuate host ${hostId}`)
-        await this.clearHost(host)
-        log.debug(`Install patches on host ${hostId}`)
-        await this.installPatches({ hosts: [host] })
-        log.debug(`Restart host ${hostId}`)
-        rebootTime = await getServerTime()
-        await this.callAsync('host.reboot', host.$ref)
-      } else {
-        // On XS/CH, we only need to evacuate/restart the hosts one by one since patches have already been installed
-        log.debug(`Evacuate and restart host ${hostId}`)
-        rebootTime = await getServerTime()
-        await this.rebootHost(hostId)
+      log.debug(`Evacuate host ${hostId}`)
+      await this.clearHost(host)
+      if(beforeEvacuateHost){
+        await beforeEvacuateHost(host)
       }
+      const rebootTime = await getServerTime()
+      await this.callAsync('host.reboot', host.$ref)
 
       log.debug(`Wait for host ${hostId} to be up`)
       await timeout.call(
@@ -653,5 +639,23 @@ export default {
     if (error !== undefined) {
       throw error
     }
+  },
+
+  @decorateWith(deferrable)
+  async rollingPoolUpdate($defer, { xsCredentials } = {}) {
+    const isXcp = _isXcp(this.pool.$master)
+
+    await this.roolingPullReboot({ xsCredentials ,  
+      beforeEvacuateAny: async ()=>{
+        if (!isXcp) {
+          log.debug('Install patches')
+          await this.installPatches({ xsCredentials })
+        }
+      },
+      beforeEvacuateHost: async host=>{
+        if(isXcp){
+          await this.installPatches({ hosts: [host] })
+        }
+      } })
   },
 }
