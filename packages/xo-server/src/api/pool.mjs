@@ -200,6 +200,31 @@ rollingUpdate.resolve = {
 
 // -------------------------------------------------------------------
 
+export const rollingReboot = async function ({ bypassBackupCheck = false, pool }) {
+  const poolId = pool.id
+  if (bypassBackupCheck) {
+    log.warn('pool.rollingReboot update with argument "bypassBackupCheck" set to true', { poolId })
+  } else {
+    await backupGuard.call(this, poolId)
+  }
+
+  await this.rollingReboot(pool)
+}
+
+rollingReboot.params = {
+  bypassBackupCheck: {
+    optional: true,
+    type: 'boolean',
+  },
+  pool: { type: 'string' },
+}
+
+rollingReboot.resolve = {
+  pool: ['pool', 'pool', 'administrate'],
+}
+
+// -------------------------------------------------------------------
+
 export async function getPatchesDifference({ source, target }) {
   return this.getPatchesDifference(target.id, source.id)
 }
