@@ -5,6 +5,7 @@ import semver from 'semver'
 import stubTrue from 'lodash/stubTrue.js'
 import uniq from 'lodash/uniq.js'
 
+
 export default class Pools {
   constructor(app) {
     this._app = app
@@ -134,4 +135,12 @@ export default class Pools {
         srsByPool[pool.id].some(sr => sr.size - sr.physical_usage >= minAvailableSrSize && checkSrName(sr.name_label))
     )
   }
+
+  async roolingPullReboot( pool){
+    const { _app } = this
+    const xapi = _app.getXapi(pool)
+    const app = this._app
+    await xapi.roolingPullReboot({ xsCredentials: app.apiContext.user.preferences.xsCredentials })
+  }
 }
+

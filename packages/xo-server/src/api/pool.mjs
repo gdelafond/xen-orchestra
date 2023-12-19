@@ -208,7 +208,7 @@ export const rollingReboot = async function ({ bypassBackupCheck = false, pool }
     await backupGuard.call(this, poolId)
   }
 
-  await this.rollingReboot(pool)
+  await this.roolingPullReboot(pool)
 }
 
 rollingReboot.params = {

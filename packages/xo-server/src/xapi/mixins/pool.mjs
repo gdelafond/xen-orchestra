@@ -32,6 +32,7 @@ export default {
       task: this.task_create('Import pool metadata'),
     })
   },
+  
   @decorateWith(deferrable)
   async roolingPullReboot($defer, { xsCredentials, beforeEvacuateAny, beforeEvacuateHost, ignoreHost } = {}){
     if (this.pool.ha_enabled) {
