@@ -5,7 +5,6 @@ import semver from 'semver'
 import stubTrue from 'lodash/stubTrue.js'
 import uniq from 'lodash/uniq.js'
 
-
 export default class Pools {
   constructor(app) {
     this._app = app
@@ -136,12 +135,11 @@ export default class Pools {
     )
   }
 
-  async rollingPullReboot( pool){
+  async rollingPullReboot(pool) {
     const { _app } = this
-    await app.checkFeatureAuthorization('ROLLING_POOL_REBOOT')
+    await _app.checkFeatureAuthorization('ROLLING_POOL_REBOOT')
     const xapi = _app.getXapi(pool)
     const app = this._app
     await xapi.rollingPullReboot({ xsCredentials: app.apiContext.user.preferences.xsCredentials })
   }
 }
-
