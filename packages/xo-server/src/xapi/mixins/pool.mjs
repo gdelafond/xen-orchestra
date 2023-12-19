@@ -34,7 +34,7 @@ export default {
   },
   
   @decorateWith(deferrable)
-  async roolingPullReboot($defer, { xsCredentials, beforeEvacuateAny, beforeEvacuateHost, ignoreHost } = {}){
+  async rollingPullReboot($defer, { xsCredentials, beforeEvacuateAny, beforeEvacuateHost, ignoreHost } = {}){
     if (this.pool.ha_enabled) {
       const haSrs = this.pool.$ha_statefiles.map(vdi => vdi.SR)
       const haConfig = this.pool.ha_configuration

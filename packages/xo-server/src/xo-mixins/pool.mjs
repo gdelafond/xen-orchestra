@@ -136,11 +136,12 @@ export default class Pools {
     )
   }
 
-  async roolingPullReboot( pool){
+  async rollingPullReboot( pool){
     const { _app } = this
+    await app.checkFeatureAuthorization('ROLLING_POOL_REBOOT')
     const xapi = _app.getXapi(pool)
     const app = this._app
-    await xapi.roolingPullReboot({ xsCredentials: app.apiContext.user.preferences.xsCredentials })
+    await xapi.rollingPullReboot({ xsCredentials: app.apiContext.user.preferences.xsCredentials })
   }
 }
 
