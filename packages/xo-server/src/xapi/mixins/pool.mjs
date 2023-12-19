@@ -34,7 +34,7 @@ export default {
   },
   
   @decorateWith(deferrable)
-  async rollingPullReboot($defer, { xsCredentials, beforeEvacuateAny, beforeEvacuateHost, ignoreHost } = {}){
+  async rollingPullReboot($defer, { xsCredentials, beforeEvacuateAny, beforeRebootHost, ignoreHost } = {}){
     if (this.pool.ha_enabled) {
       const haSrs = this.pool.$ha_statefiles.map(vdi => vdi.SR)
       const haConfig = this.pool.ha_configuration
@@ -108,8 +108,8 @@ export default {
       const getServerTime = async () => parseDateTime(await this.call('host.get_servertime', host.$ref)) * 1e3
       log.debug(`Evacuate host ${hostId}`)
       await this.clearHost(host)
-      if(beforeEvacuateHost){
-        await beforeEvacuateHost(host)
+      if(beforeRebootHost){
+        await beforeRebootHost(host)
       }
       const rebootTime = await getServerTime()
       await this.callAsync('host.reboot', host.$ref)

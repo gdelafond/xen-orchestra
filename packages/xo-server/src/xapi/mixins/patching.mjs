@@ -507,7 +507,7 @@ export default {
           await this.installPatches({ xsCredentials })
         }
       },
-      beforeEvacuateHost: async host=>{
+      beforeRebootHost: async host=>{
         if(isXcp){
           
           await this.installPatches({ hosts: [host] })
