@@ -510,6 +510,7 @@ export default {
       beforeRebootHost: async host => {
         if (isXcp) {
           
+          log.debug(`Install patches on host ${hostId}`)
           await this.installPatches({ hosts: [host] })
         }
       },
