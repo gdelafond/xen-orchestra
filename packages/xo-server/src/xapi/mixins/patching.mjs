@@ -500,15 +500,15 @@ export default {
       hasMissingPatchesByHost[hostUuid] = missingPatches.length > 0
     })
 
-    await this.rollingPullReboot({ xsCredentials ,  
-      beforeEvacuateAny: async ()=>{
+    await this.rollingPoolReboot({ xsCredentials ,  
+      beforeEvacuateAny: async () => {
         if (!isXcp) {
           log.debug('Install patches')
           await this.installPatches({ xsCredentials })
         }
       },
-      beforeRebootHost: async host=>{
-        if(isXcp){
+      beforeRebootHost: async host => {
+        if (isXcp) {
           
           await this.installPatches({ hosts: [host] })
         }

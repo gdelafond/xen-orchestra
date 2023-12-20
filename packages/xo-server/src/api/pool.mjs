@@ -200,7 +200,7 @@ rollingUpdate.resolve = {
 
 // -------------------------------------------------------------------
 
-export const rollingReboot = async function ({ bypassBackupCheck = false, pool }) {
+export const rollingReboot = async function ({ bypassBackupCheck, pool }) {
   const poolId = pool.id
   if (bypassBackupCheck) {
     log.warn('pool.rollingReboot update with argument "bypassBackupCheck" set to true', { poolId })
@@ -208,13 +208,14 @@ export const rollingReboot = async function ({ bypassBackupCheck = false, pool }
     await backupGuard.call(this, poolId)
   }
 
-  await this.roolingPullReboot(pool)
+  await this.rollingPoolReboot(pool)
 }
 
 rollingReboot.params = {
   bypassBackupCheck: {
     optional: true,
     type: 'boolean',
+    default: false
   },
   pool: { type: 'string' },
 }
