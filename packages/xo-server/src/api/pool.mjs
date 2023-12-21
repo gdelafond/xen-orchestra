@@ -213,7 +213,7 @@ export const rollingReboot = async function ({ bypassBackupCheck, pool }) {
 
 rollingReboot.params = {
   bypassBackupCheck: {
-    default: false
+    default: false,
     type: 'boolean',
   },
   pool: { type: 'string' },
