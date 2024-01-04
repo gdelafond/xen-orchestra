@@ -33,6 +33,7 @@
 
 <!--packages-start-->
 
+- @xen-orchestra/self-signed minor
 - xo-cli patch
 - xo-server patch
 - xo-web minor
