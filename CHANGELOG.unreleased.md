@@ -7,6 +7,8 @@
 
 > Users must be able to say: “Nice enhancement, I'm eager to test it”
 
+- [Pool/Host] Add a warning if hosts do not have the same version within a pool [#7059](https://github.com/vatesfr/xen-orchestra/issues/7059) (PR [#7280](https://github.com/vatesfr/xen-orchestra/pull/7280))
+
 ### Bug fixes
 
 > Users must be able to say: “I had this issue, happy to know it's fixed”
@@ -30,5 +32,6 @@
 <!--packages-start-->
 
 - xo-server patch
+- xo-web minor
 
 <!--packages-end-->
