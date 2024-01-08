@@ -2,7 +2,6 @@ import { asyncEach } from '@vates/async-each'
 import fs from 'node:fs/promises'
 
 export async function watchForNew(path, callback){
-    console.log('WATCH FOR NEW IN ', path )
     const watcher = fs.watch(path)
     for await (const { eventType, filename } of watcher) {
       if( filename === null ){
@@ -13,22 +12,23 @@ export async function watchForNew(path, callback){
       if (filename.startsWith('.')) {
         // temp file during upload
         continue
+      } 
+      if(eventType ==='change'){
+        // continue
       }
       try{
-          const stat = await fs.stat(path)
-          if (stat.mtimeMs === stat.ctimeMs) {
-            await callback(filename, true, watcher)
-          } else {
-            console.log('not new ', {stat})
-          }
-      }catch(error){
-  console.warn(error)
+        await fs.stat(filename)
+      }catch(err){
+        if(err.code !== 'ENOENT'){
+          throw err
+        }
+        console.log('file does not exists', filename)
       }
+      await callback(filename, true, watcher)
     }
 }
 
 export async function watchForExistingAndNew(path, callback) {
-console.log('WATCH FOR ', path )
   await asyncEach(await fs.readdir(path)
     , entry => callback(entry))
 

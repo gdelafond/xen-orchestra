@@ -17,17 +17,22 @@ async function waitForVhdDirectoryCompletion(vhdDirectoryPath) {
     bat: false,
     footer: false,
     header: false,
+    "chunk-filters.json" : false
   }
-  const METADATA_FILES = ['bat', 'footer', 'header']
+  const METADATA_FILES = ['bat', 'footer', 'header', 'chunk-filters.json']
   await watchForExistingAndNew(vhdDirectoryPath, (pathInDirectory, _, watcher) => {
     if (METADATA_FILES.includes(pathInDirectory)) {
       console.log({pathInDirectory})
       metadataStatus[pathInDirectory] = true
       if (Object.values(metadataStatus).every(t => t)) {
-        console.log('vhd is complete' ,watcher)
+        console.log('>>>vhd is complete' ,watcher)
         watcher.close()
         // will end the watcher, stop this loop and return
+      } else{
+        console.log('not complete', metadataStatus)
       }
+    } else{
+      console.log('not watched' , pathInDirectory)
     }
   })
 }
@@ -79,7 +84,6 @@ async function watchVdis(vdisPath, immutabilityCachePath) {
 
 export async function watch(vmPath, immutabilityCachePath) {
   await watchForExistingAndNew(vmPath, async (pathInDirectory, isNew) => {
-    console.log({vmPath, pathInDirectory, isNew, ext: extname(pathInDirectory), isWatched:  WATCHED_FILE_EXTENSION.includes(extname(pathInDirectory))})
     const path = join(vmPath, pathInDirectory)
     if (pathInDirectory === 'vdis') {
       watchVdis(path, immutabilityCachePath).catch(warn)

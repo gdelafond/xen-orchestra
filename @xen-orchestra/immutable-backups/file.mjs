@@ -13,18 +13,13 @@ export async function makeImmutable(path, immutabilityCachePath) {
 }
 
 export async function liftImmutability(filePath, immutabilityCachePath) {
-    console.log('lift file', filePath, immutabilityCachePath)
 
-    const cacheFileName = computeCacheFilePath(filePath, immutabilityCachePath, true)
-    try{ 
-  await execa('chattr', ['-i', cacheFileName])
-}catch(err){
-    console.log('error while clearing cache immut', err)
-}
-console.log('cleared immut cache')
+  const cacheFileName = computeCacheFilePath(filePath, immutabilityCachePath, true)
+  try {
+    await execa('chattr', ['-i', cacheFileName])
+  } catch (err) {
+    // console.log('error while clearing cache immut', err)
+  }
   await execa('chattr', ['-i', filePath])
-  console.log('cleared file')
   await fs.unlink(cacheFileName)
-console.log('cleared cache')
-
 }

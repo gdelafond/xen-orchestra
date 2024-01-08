@@ -8,21 +8,13 @@ import { watchForExistingAndNew } from './newFileWatcher.mjs'
 
 const { warn } = createLogger('xen-orchestra:immutable-backups:remote')
 
-async function test(remotePath) { 
+async function test(remotePath,immutabilityCachePath) { 
   await fs.readdir(remotePath)
-const immutabilityCache = path.join(remotePath, '.immutable')
-try{
 
-    await fs.mkdir(immutabilityCache)
-}catch(err){
-    if(err.code !== 'EEXIST'){
-        throw err
-    }
-}
   const testPath = path.join(remotePath, '.test-immut')
   // cleanup
   try {
-    await File.liftImmutability(testPath,immutabilityCache)
+    await File.liftImmutability(testPath,immutabilityCachePath)
     await fs.unlink(testPath)
   } catch (err) {}
   // can create , modify and delete a file
@@ -32,18 +24,19 @@ try{
   
   // cannot modify or delete an immutable file
   await fs.writeFile(testPath, `test immut ${new Date()}`)
-  await File.makeImmutable(testPath,immutabilityCache)
+  await File.makeImmutable(testPath,immutabilityCachePath)
   try {
     await fs.writeFile(testPath, `test immut change 2  ${new Date()}`)
     await fs.unlink(testPath)
-    throw new Error(`breach of contract : succeed in modifying and deleteing an immutable file`)
+    throw new Error(`breach of contract : succeed in modifying and deleting an immutable file`)
   } catch (error) {
     if (error.code !== 'EPERM') {
       throw error
     }
   }
   // can modify and delete a file after lifting immutability
-  await File.liftImmutability(testPath,immutabilityCache)
+  await File.liftImmutability(testPath,immutabilityCachePath)
+
   await fs.writeFile(testPath, `test immut change 3 ${new Date()}`)
   await fs.unlink(testPath)
 }
@@ -53,7 +46,17 @@ async function liftImmutability(remoteRootPath, immutabilityDuration) {
 }
 
 export async function watchRemote(remoteRootPath, immutabilityDuration) {
-  await test(remoteRootPath)
+  const immutabilityCachePath = path.join(remoteRootPath, '.immutable')
+  try{
+
+    await fs.mkdir(immutabilityCachePath)
+  }catch(err){
+      if(err.code !== 'EEXIST'){
+          throw err
+      }
+  }
+  console.log('immut dir created')
+  await test(remoteRootPath,immutabilityCachePath)
 
   // add duration and watch status in the metadata.json of the remote
   await fs.writeFile(
@@ -69,7 +72,6 @@ export async function watchRemote(remoteRootPath, immutabilityDuration) {
     
   )
 
-const immutabilityCachePath = path.join(remoteRootPath, '.immutable')
   // watch the remote for any new VM metadata json file
 
   watchForExistingAndNew(remoteRootPath, async pathInRemote => {
@@ -88,14 +90,11 @@ const immutabilityCachePath = path.join(remoteRootPath, '.immutable')
       watchPoolOrMetadata(path.join(remoteRootPath, 'xo-vm-backups'),immutabilityCachePath).catch(warn)
     }
   }).catch(warn)
-
+  setInterval(()=>liftImmutability(remoteRootPath, immutabilityDuration), 60*60*1000*12)
   // @todo : shoulw also watch metadata and pool backups
 }
 
-async function deepCheck() {
-  // ensure all the files linked to a backup are in line with the json immutability status
-  // check if any immutable file has been modified
-}
+
 /**
  * This try to attains the "governance mode" of object locking
  *

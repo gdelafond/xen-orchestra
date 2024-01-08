@@ -159,6 +159,7 @@ exports.VhdDirectory = class VhdDirectory extends VhdAbstract {
   }
 
   async _writeChunk(partName, buffer) {
+    console.log('write', partName)
     assert.notStrictEqual(
       this._opts?.flags,
       'r',
